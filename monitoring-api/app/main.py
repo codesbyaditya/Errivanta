@@ -60,18 +60,19 @@ def seed_initial_demo_data(db: Session):
         db.commit()
         db.refresh(org)
 
-    # 2. Demo Admin User (admin@servicewatch.io / password123)
-    admin_user = db.query(User).filter(User.email == "admin@servicewatch.io").first()
-    if not admin_user:
-        admin_user = User(
-            organization_id=org.id,
-            email="admin@servicewatch.io",
-            hashed_password=get_password_hash("password123"),
-            full_name="ServiceWatch Admin",
-            role="admin",
-        )
-        db.add(admin_user)
-        db.commit()
+    # 2. Demo Admin Users (admin@errivanta.io & admin@servicewatch.io / password123)
+    for email, name in [("admin@errivanta.io", "Errivanta Admin"), ("admin@servicewatch.io", "Errivanta Admin")]:
+        u = db.query(User).filter(User.email == email).first()
+        if not u:
+            u = User(
+                organization_id=org.id,
+                email=email,
+                hashed_password=get_password_hash("password123"),
+                full_name=name,
+                role="admin",
+            )
+            db.add(u)
+            db.commit()
 
     # 3. Payment Service
     pay_service = db.query(Service).filter(Service.name == "payment-service").first()
