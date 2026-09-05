@@ -1,5 +1,10 @@
 {
-  "dependencies": {
-    "psql": "^0.0.1"
+  "name": "errivanta",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cd dashboard && npm install && npm run build",
+    "dev": "cd dashboard && npm run dev"
   }
 }
+
