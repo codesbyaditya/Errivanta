@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # -------------------------------------------------------------
+  # Infrastructure: PostgreSQL & Redis
+  # -------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: servicewatch-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-servicewatch_monitoring}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: servicewatch-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # -------------------------------------------------------------
+  # ServiceWatch Monitoring Platform
+  # -------------------------------------------------------------
+  monitoring-api:
+    build:
+      context: ./monitoring-api
+      dockerfile: Dockerfile
+    container_name: servicewatch-monitoring-api
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/servicewatch_monitoring
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=${JWT_SECRET:-servicewatch_super_secure_production_secret_key_2026}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-}
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - NOTIFICATIONS_ENABLED=${NOTIFICATIONS_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  monitoring-worker:
+    build:
+      context: ./monitoring-api
+      dockerfile: Dockerfile
+    container_name: servicewatch-monitoring-worker
+    restart: unless-stopped
+    command: ["python", "-m", "app.worker"]
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/servicewatch_monitoring
+      - REDIS_URL=redis://redis:6379/0
+      - NOTIFICATIONS_ENABLED=${NOTIFICATIONS_ENABLED:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    container_name: servicewatch-dashboard
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - monitoring-api
+
+  # -------------------------------------------------------------
+  # Monitored Microservices Ecosystem
+  # -------------------------------------------------------------
+  payment-service:
+    build:
+      context: .
+      dockerfile: payment-service/Dockerfile
+    container_name: servicewatch-payment-service
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/servicewatch_payment
+      - SERVICEWATCH_API_KEY=sw_demo_payment_key_12345
+      - SERVICEWATCH_URL=http://monitoring-api:8001/api/v1/telemetry
+    depends_on:
+      - monitoring-api
+      - postgres
+
+  order-service:
+    build:
+      context: .
+      dockerfile: order-service/Dockerfile
+    container_name: servicewatch-order-service
+    restart: unless-stopped
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/servicewatch_order
+      - SERVICEWATCH_API_KEY=sw_demo_order_key_12345
+      - SERVICEWATCH_URL=http://monitoring-api:8001/api/v1/telemetry
+    depends_on:
+      - monitoring-api
+      - postgres
+
+  user-service:
+    build:
+      context: .
+      dockerfile: user-service/Dockerfile
+    container_name: servicewatch-user-service
+    restart: unless-stopped
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/servicewatch_user
+      - SERVICEWATCH_API_KEY=sw_live_user_service_key
+      - SERVICEWATCH_URL=http://monitoring-api:8001/api/v1/telemetry
+    depends_on:
+      - monitoring-api
+      - postgres
+
+volumes:
+  pgdata:
+  redisdata:

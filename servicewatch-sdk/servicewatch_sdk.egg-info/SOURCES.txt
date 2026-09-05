@@ -1,0 +1,12 @@
+README.md
+setup.py
+servicewatch/__init__.py
+servicewatch/client.py
+servicewatch/middleware.py
+servicewatch/models.py
+servicewatch_sdk.egg-info/PKG-INFO
+servicewatch_sdk.egg-info/SOURCES.txt
+servicewatch_sdk.egg-info/dependency_links.txt
+servicewatch_sdk.egg-info/requires.txt
+servicewatch_sdk.egg-info/top_level.txt
+tests/test_sdk.py

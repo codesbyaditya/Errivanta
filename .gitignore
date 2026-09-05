@@ -1,0 +1,43 @@
+# Environment variables & secrets
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+!*/.env.example
+
+# Python virtual environments & bytecode
+venv/
+*/venv/
+.venv/
+*/.venv/
+ENV/
+env/
+__pycache__/
+*/__pycache__/
+*/**/__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Node & Frontend
+node_modules/
+*/node_modules/
+dist/
+*/dist/
+.vite/
+
+# Databases & local state
+*.sqlite3
+*.db
+*.log
+
+# Pytest & IDE
+.pytest_cache/
+*/.pytest_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+*.swp
+*.swo

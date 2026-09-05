@@ -1,0 +1,101 @@
+name: ServiceWatch CI Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Automated Test Suites
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: servicewatch_monitoring
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r payment-service/requirements.txt
+          pip install -r order-service/requirements.txt
+          pip install -r user-service/requirements.txt
+          pip install -r monitoring-api/requirements.txt
+          pip install -e servicewatch-sdk
+          pip install pytest httpx fakeredis email-validator pyjwt passlib bcrypt cryptography requests
+
+      - name: Test SDK Package
+        run: |
+          cd servicewatch-sdk && pytest -v
+
+      - name: Test Payment Service
+        run: |
+          cd payment-service && pytest -v
+
+      - name: Test Order Service
+        run: |
+          cd order-service && pytest -v
+
+      - name: Test User Service
+        run: |
+          cd user-service && pytest -v
+
+      - name: Test Monitoring API & Multi-Tenant Core
+        run: |
+          cd monitoring-api && pytest -v
+
+  docker-build:
+    name: Build Docker Images
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Monitoring API Container
+        run: docker build -t servicewatch-monitoring-api:latest -f monitoring-api/Dockerfile monitoring-api/
+
+      - name: Build Payment Service Container
+        run: docker build -t servicewatch-payment-service:latest -f payment-service/Dockerfile .
+
+      - name: Build Order Service Container
+        run: docker build -t servicewatch-order-service:latest -f order-service/Dockerfile .
+
+      - name: Build User Service Container
+        run: docker build -t servicewatch-user-service:latest -f user-service/Dockerfile .
