@@ -830,12 +830,12 @@ function ApiKeysView({
           lineHeight: 1.6
         }}>
 {`from fastapi import FastAPI
-from servicewatch import ServiceWatch
+from errivanta import Errivanta
 
 app = FastAPI(title="My Service")
 
 # 1. Initialize Errivanta Monitoring
-monitor = ServiceWatch(
+monitor = Errivanta(
     service_name="my-microservice",
     api_key="${newlyCreatedKey?.api_key || 'sw_live_YOUR_API_KEY'}",
     monitoring_url="${BACKEND_URL}/api/v1/telemetry"

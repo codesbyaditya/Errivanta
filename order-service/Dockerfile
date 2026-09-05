@@ -11,8 +11,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy and install SDK
-COPY ../servicewatch-sdk /servicewatch-sdk
-RUN pip install -e /servicewatch-sdk
+COPY ../errivanta-sdk /errivanta-sdk
+RUN pip install -e /errivanta-sdk
 
 COPY app ./app
 

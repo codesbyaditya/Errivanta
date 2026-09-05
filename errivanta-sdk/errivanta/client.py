@@ -1,14 +1,14 @@
 import logging
 from typing import Optional
 import httpx
-from servicewatch.models import TelemetryEvent
+from errivanta.models import TelemetryEvent
 
-logger = logging.getLogger("servicewatch")
+logger = logging.getLogger("errivanta")
 
 
-class ServiceWatchClient:
+class ErrivantaClient:
     """
-    HTTP client responsible for dispatching telemetry events to the ServiceWatch Monitoring API.
+    HTTP client responsible for dispatching telemetry events to the Errivanta Monitoring API.
     Designed with strict timeouts and error-swallowing to ensure customer applications never crash.
     """
 
@@ -25,7 +25,7 @@ class ServiceWatchClient:
 
     async def send_event_async(self, event: TelemetryEvent) -> bool:
         """
-        Asynchronously sends a telemetry event to the ServiceWatch API.
+        Asynchronously sends a telemetry event to the Errivanta API.
         Returns True if successful, False if failed. Never raises exceptions.
         """
         headers = {
@@ -41,13 +41,13 @@ class ServiceWatchClient:
                 )
                 if response.status_code not in (200, 201):
                     logger.warning(
-                        f"[ServiceWatch] Failed to deliver telemetry: HTTP {response.status_code} - {response.text}"
+                        f"[Errivanta] Failed to deliver telemetry: HTTP {response.status_code} - {response.text}"
                     )
                     return False
                 return True
         except Exception as exc:
             # Graceful degradation: Log a warning and swallow exception so customer app is unaffected
-            logger.warning(f"[ServiceWatch] Telemetry delivery error (gracefully ignored): {exc}")
+            logger.warning(f"[Errivanta] Telemetry delivery error (gracefully ignored): {exc}")
             return False
 
     def send_event_sync(self, event: TelemetryEvent) -> bool:
@@ -65,7 +65,16 @@ class ServiceWatchClient:
                     json=event.model_dump(),
                     headers=headers,
                 )
-                return response.status_code in (200, 201)
+                if response.status_code not in (200, 201):
+                    logger.warning(
+                        f"[Errivanta] Failed to deliver telemetry: HTTP {response.status_code} - {response.text}"
+                    )
+                    return False
+                return True
         except Exception as exc:
-            logger.warning(f"[ServiceWatch] Telemetry delivery error (gracefully ignored): {exc}")
+            logger.warning(f"[Errivanta] Telemetry delivery error (gracefully ignored): {exc}")
             return False
+
+
+# Backward compatibility alias
+ServiceWatchClient = ErrivantaClient

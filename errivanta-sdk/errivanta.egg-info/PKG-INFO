@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: errivanta
+Version: 0.2.0
+Summary: Official Python SDK & FastAPI Middleware for Errivanta APM & Observability Platform
+Home-page: https://github.com/codesbyaditya/errivanta
+Author: Errivanta Team
+Author-email: errivanta@gmail.com
+Requires-Python: >=3.9
+Requires-Dist: httpx>=0.27.0
+Requires-Dist: pydantic>=2.0.0
+Requires-Dist: starlette>=0.36.0
+Dynamic: author
+Dynamic: author-email
+Dynamic: home-page
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary

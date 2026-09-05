@@ -7,7 +7,7 @@ from app.config import settings
 from app.database import get_db, Base, engine
 from app.models import User
 from app.schemas import UserCreate, UserResponse, HealthResponse
-from servicewatch import ServiceWatch
+from errivanta import Errivanta
 
 
 @asynccontextmanager
@@ -23,11 +23,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# Attach ServiceWatch SDK Monitoring Middleware
-monitor = ServiceWatch(
-    service_name=settings.APP_NAME,
-    api_key=settings.SERVICEWATCH_API_KEY,
-    monitoring_url=settings.SERVICEWATCH_URL,
+# Attach Errivanta SDK Monitoring Middleware
+monitor = Errivanta(
+    service_name="user-service",
+    api_key="sw_demo_12345",
+    monitoring_url="http://localhost:8001",
 )
 monitor.init_app(app)
 

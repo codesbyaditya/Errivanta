@@ -1,26 +1,34 @@
 from typing import Optional, List
-from servicewatch.client import ServiceWatchClient
-from servicewatch.middleware import ServiceWatchMiddleware
-from servicewatch.models import TelemetryEvent
+from errivanta.client import ErrivantaClient, ServiceWatchClient
+from errivanta.middleware import ErrivantaMiddleware, ServiceWatchMiddleware
+from errivanta.models import TelemetryEvent
 
-__version__ = "0.1.0"
-__all__ = ["ServiceWatch", "ServiceWatchClient", "ServiceWatchMiddleware", "TelemetryEvent"]
+__version__ = "0.2.0"
+__all__ = [
+    "Errivanta",
+    "ErrivantaClient",
+    "ErrivantaMiddleware",
+    "TelemetryEvent",
+    "ServiceWatch",
+    "ServiceWatchClient",
+    "ServiceWatchMiddleware",
+]
 
 
-class ServiceWatch:
+class Errivanta:
     """
-    Main entry point for integrating ServiceWatch into a Python/FastAPI service.
+    Main entry point for integrating Errivanta into a Python/FastAPI service.
 
     Example usage:
     ```python
     from fastapi import FastAPI
-    from servicewatch import ServiceWatch
+    from errivanta import Errivanta
 
     app = FastAPI()
 
-    monitor = ServiceWatch(
+    monitor = Errivanta(
         service_name="payment-service",
-        api_key="sw_demo_12345",
+        api_key="sw_live_YOUR_KEY",
         monitoring_url="http://localhost:8001"
     )
     monitor.init_app(app)
@@ -39,7 +47,7 @@ class ServiceWatch:
         self.api_key = api_key
         self.monitoring_url = monitoring_url.rstrip("/")
         self.skip_paths = skip_paths or []
-        self.client = ServiceWatchClient(
+        self.client = ErrivantaClient(
             api_key=self.api_key,
             monitoring_url=self.monitoring_url,
             timeout_seconds=timeout,
@@ -47,11 +55,15 @@ class ServiceWatch:
 
     def init_app(self, app) -> None:
         """
-        Attaches the ServiceWatch monitoring middleware to the provided FastAPI / Starlette app.
+        Attaches the Errivanta monitoring middleware to the provided FastAPI / Starlette app.
         """
         app.add_middleware(
-            ServiceWatchMiddleware,
+            ErrivantaMiddleware,
             service_name=self.service_name,
             client=self.client,
             skip_paths=self.skip_paths,
         )
+
+
+# Backward compatibility alias
+ServiceWatch = Errivanta

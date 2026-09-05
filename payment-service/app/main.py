@@ -6,7 +6,7 @@ from app.config import settings
 from app.database import get_db, Base, engine
 from app.models import Payment, PaymentStatus
 from app.schemas import PaymentCreate, PaymentResponse, HealthResponse
-from servicewatch import ServiceWatch
+from errivanta import Errivanta
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -20,13 +20,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-
-# Initialize and attach ServiceWatch monitoring middleware
-monitor = ServiceWatch(
-    service_name=settings.APP_NAME,
-    api_key=settings.SERVICEWATCH_API_KEY,
-    monitoring_url=settings.SERVICEWATCH_URL,
+# Initialize and attach Errivanta monitoring middleware
+monitor = Errivanta(
+    service_name="payment-service",
+    api_key="sw_demo_12345",
+    monitoring_url="http://localhost:8001",
 )
 monitor.init_app(app)
 
