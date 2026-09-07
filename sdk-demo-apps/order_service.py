@@ -18,8 +18,8 @@ PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8003")
 # 1. Initialize Errivanta Monitoring
 monitor = Errivanta(
     service_name="order-service",
-    api_key="sw_f2ed432dead6692e4ea0b1a8795483ee",
-    monitoring_url="https://errivanta.onrender.com/api/v1/telemetry"
+    api_key="sw_demo_order_key_12345",
+    monitoring_url="https://errivanta.onrender.com"
 )
 monitor.init_app(app)
 

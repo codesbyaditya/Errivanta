@@ -14,7 +14,7 @@ app = FastAPI(title="Payment Service", version="1.0.0")
 # 2. Configure and attach Errivanta SDK
 monitor = Errivanta(
     service_name="payment-service",
-    api_key="sw_ab1c26f47058eb7d66e92459e638d526",
+    api_key="sw_demo_payment_key_12345",
     monitoring_url="https://errivanta.onrender.com"
 )
 monitor.init_app(app)

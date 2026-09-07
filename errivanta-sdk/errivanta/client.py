@@ -38,10 +38,20 @@ class ErrivantaClient:
             "X-API-Key": self.api_key,
         }
         try:
+            data = event.model_dump(mode="json") if hasattr(event, "model_dump") else event.dict()
+            payload = {
+                "service_name": data.get("service_name"),
+                "endpoint": data.get("endpoint"),
+                "method": data.get("method") or data.get("http_method", "GET"),
+                "status_code": data.get("status_code", 200),
+                "response_time_ms": data.get("response_time_ms") if data.get("response_time_ms") is not None else data.get("latency_ms", 0.0),
+                "error": data.get("error") or data.get("error_message"),
+                "timestamp": data.get("timestamp"),
+            }
             async with httpx.AsyncClient(timeout=self.timeout) as client:
                 response = await client.post(
                     self.events_endpoint,
-                    json=event.model_dump(),
+                    json=payload,
                     headers=headers,
                 )
                 if response.status_code not in (200, 201):
@@ -64,18 +74,23 @@ class ErrivantaClient:
             "X-API-Key": self.api_key,
         }
         try:
+            data = event.model_dump(mode="json") if hasattr(event, "model_dump") else event.dict()
+            payload = {
+                "service_name": data.get("service_name"),
+                "endpoint": data.get("endpoint"),
+                "method": data.get("method") or data.get("http_method", "GET"),
+                "status_code": data.get("status_code", 200),
+                "response_time_ms": data.get("response_time_ms") if data.get("response_time_ms") is not None else data.get("latency_ms", 0.0),
+                "error": data.get("error") or data.get("error_message"),
+                "timestamp": data.get("timestamp"),
+            }
             with httpx.Client(timeout=self.timeout) as client:
                 response = client.post(
                     self.events_endpoint,
-                    json=event.model_dump(),
+                    json=payload,
                     headers=headers,
                 )
-                if response.status_code not in (200, 201):
-                    logger.warning(
-                        f"[Errivanta] Failed to deliver telemetry: HTTP {response.status_code} - {response.text}"
-                    )
-                    return False
-                return True
+                return response.status_code in (200, 201)
         except Exception as exc:
             logger.warning(f"[Errivanta] Telemetry delivery error (gracefully ignored): {exc}")
             return False

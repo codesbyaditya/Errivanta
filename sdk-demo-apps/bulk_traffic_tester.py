@@ -18,7 +18,7 @@ CONCURRENCY = 10
 
 
 def send_single_request(i: int):
-    with httpx.Client(timeout=5.0) as client:
+    with httpx.Client(timeout=10.0) as client:
         # Mix of normal requests and error requests to exceed the 10% critical error threshold
         roll = random.random()
         try:
