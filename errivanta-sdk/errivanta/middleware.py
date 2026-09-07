@@ -45,9 +45,12 @@ class ErrivantaMiddleware(BaseHTTPMiddleware):
         try:
             response = await call_next(request)
             status_code = response.status_code
+            if status_code >= 400:
+                error_message = f"HTTP {status_code} Error on {request.method} {path}"
             return response
         except Exception as exc:
-            error_message = str(exc)
+            status_code = 500
+            error_message = f"{type(exc).__name__}: {str(exc)}"
             raise exc
         finally:
             latency_ms = (time.perf_counter() - start_time) * 1000.0
