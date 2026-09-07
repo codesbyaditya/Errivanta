@@ -8,18 +8,20 @@ from errivanta import Errivanta
 load_dotenv()
 
 # 1. Initialize FastAPI app
-app = FastAPI(title="Order Service", version="1.0.0")
 
 # 2. Configure and attach Errivanta SDK
+
+
+app = FastAPI(title="Order Service")
 PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8003")
 
+# 1. Initialize Errivanta Monitoring
 monitor = Errivanta(
     service_name="order-service",
-    api_key="sw_29fe8a028e46e8142cad4eca40a7cae4",
-    monitoring_url="https://errivanta.onrender.com"
+    api_key="sw_f2ed432dead6692e4ea0b1a8795483ee",
+    monitoring_url="https://errivanta.onrender.com/api/v1/telemetry"
 )
 monitor.init_app(app)
-
 
 @app.get("/")
 async def root():
