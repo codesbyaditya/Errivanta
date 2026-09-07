@@ -65,18 +65,10 @@ class ErrivantaMiddleware(BaseHTTPMiddleware):
                 error_message=error_message,
             )
 
-            # Fire-and-forget asynchronous dispatch
-            asyncio.create_task(self._safe_dispatch(event))
-
-    async def _safe_dispatch(self, event: TelemetryEvent) -> None:
-        """
-        Background dispatch task with error catching to ensure total isolation from customer requests.
-        """
-        try:
-            await self.client.send_event_async(event)
-        except Exception as exc:
-            logger.debug(f"[Errivanta] Non-blocking telemetry background dispatch error: {exc}")
+            # Fire-and-forget background dispatch via isolated thread pool (immune to ASGI task cancellations)
+            self.client.send_event_background(event)
 
 
 # Backward compatibility alias
 ServiceWatchMiddleware = ErrivantaMiddleware
+
