@@ -18,12 +18,12 @@ class Settings(BaseSettings):
 
     # Notifications Configuration
     SLACK_WEBHOOK_URL: str = os.getenv("SLACK_WEBHOOK_URL", "")
-    SMTP_HOST: str = os.getenv("SMTP_HOST", "")
+    SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
-    SMTP_USER: str = os.getenv("SMTP_USER", "")
-    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
-    SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "alerts@errivanta.io")
-    ALERT_EMAIL_RECIPIENT: str = os.getenv("ALERT_EMAIL_RECIPIENT", "admin@company.com")
+    SMTP_USER: str = os.getenv("SMTP_USER", "errivanta@gmail.com")
+    SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "hjrbmjbiruxzdvli")
+    SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "errivanta@gmail.com")
+    ALERT_EMAIL_RECIPIENT: str = os.getenv("ALERT_EMAIL_RECIPIENT", "errivanta@gmail.com")
     NOTIFICATIONS_ENABLED: bool = os.getenv("NOTIFICATIONS_ENABLED", "True").lower() in ("true", "1", "yes")
 
     model_config = SettingsConfigDict(
