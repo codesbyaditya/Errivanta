@@ -1,4 +1,5 @@
 import os
+import sys
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -15,26 +16,23 @@ SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "errivanta@gmail.com")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 SMTP_FROM = os.getenv("SMTP_FROM_EMAIL", "errivanta@gmail.com")
-RECIPIENT = os.getenv("ALERT_EMAIL_RECIPIENT", "errivanta@gmail.com")
+# Recipient can be passed via command-line (e.g. python test_email_delivery.py myuser@example.com)
+if len(sys.argv) > 1 and "@" in sys.argv[1]:
+    RECIPIENT = sys.argv[1].strip()
+else:
+    RECIPIENT = os.getenv("ALERT_EMAIL_RECIPIENT", "errivanta@gmail.com")
 
-import sys
-if sys.platform == "win32":
-    try:
-        sys.stdout.reconfigure(encoding="utf-8")
-    except Exception:
-        pass
-
-def test_smtp_connection():
+def test_smtp_connection(recipient: str = RECIPIENT):
     print("=" * 60)
     print("[EMAIL TEST] Testing Direct SMTP Email Delivery")
-    print(f"Host: {SMTP_HOST}:{SMTP_PORT}")
-    print(f"Sender: {SMTP_FROM}")
-    print(f"Recipient: {RECIPIENT}")
+    print(f"Host:      {SMTP_HOST}:{SMTP_PORT}")
+    print(f"Sender:    {SMTP_FROM} (Errivanta Platform Mailer)")
+    print(f"Recipient: {recipient} (Organization Admin Email)")
     print("=" * 60)
 
     msg = MIMEMultipart()
     msg["From"] = SMTP_FROM
-    msg["To"] = RECIPIENT
+    msg["To"] = recipient
     msg["Subject"] = "[CRITICAL] Errivanta Incident Alert: High Error Rate Detected"
     
     body = """
@@ -60,10 +58,10 @@ Recent error: ConnectionRefusedError: Unable to connect to Payment Database pool
             server.starttls()
             server.login(SMTP_USER, SMTP_PASSWORD)
             server.send_message(msg)
-        print("✅ SUCCESS: Incident alert email sent successfully to", RECIPIENT)
+        print(f"[SUCCESS] Incident alert email sent successfully to {recipient}")
         return True
     except Exception as e:
-        print("❌ FAILED to send email via SMTP:", e)
+        print(f"[FAILED] to send email via SMTP: {e}")
         return False
 
 if __name__ == "__main__":
