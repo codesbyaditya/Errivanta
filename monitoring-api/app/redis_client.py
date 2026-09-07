@@ -4,7 +4,11 @@ import os
 import time
 from typing import Dict, List, Optional, Tuple
 
-import redis
+try:
+    import redis
+except ImportError:
+    redis = None
+
 try:
     import fakeredis
 except ImportError:
@@ -13,10 +17,115 @@ except ImportError:
 logger = logging.getLogger("servicewatch.redis")
 
 
+class InMemoryPipeline:
+    def __init__(self, client):
+        self._client = client
+        self._ops = []
+
+    def incr(self, key, amount=1):
+        self._ops.append(lambda: self._client.incr(key, amount))
+        return self
+
+    def incrbyfloat(self, key, amount):
+        self._ops.append(lambda: self._client.incrbyfloat(key, amount))
+        return self
+
+    def expire(self, key, seconds):
+        self._ops.append(lambda: self._client.expire(key, seconds))
+        return self
+
+    def lpush(self, key, *values):
+        self._ops.append(lambda: self._client.lpush(key, *values))
+        return self
+
+    def ltrim(self, key, start, end):
+        self._ops.append(lambda: self._client.ltrim(key, start, end))
+        return self
+
+    def execute(self):
+        results = [op() for op in self._ops]
+        self._ops.clear()
+        return results
+
+
+class InMemoryRedis:
+    def __init__(self):
+        self._store = {}
+        self._lists = {}
+
+    def get(self, key):
+        return self._store.get(str(key))
+
+    def set(self, key, value, ex=None):
+        self._store[str(key)] = str(value)
+        return True
+
+    def incr(self, key, amount=1):
+        k = str(key)
+        val = int(self._store.get(k, 0)) + amount
+        self._store[k] = str(val)
+        return val
+
+    def incrbyfloat(self, key, amount):
+        k = str(key)
+        val = float(self._store.get(k, 0.0)) + float(amount)
+        self._store[k] = str(val)
+        return val
+
+    def expire(self, key, seconds):
+        return True
+
+    def lpush(self, key, *values):
+        k = str(key)
+        if k not in self._lists:
+            self._lists[k] = []
+        for v in values:
+            self._lists[k].insert(0, str(v))
+        return len(self._lists[k])
+
+    def rpush(self, key, *values):
+        k = str(key)
+        if k not in self._lists:
+            self._lists[k] = []
+        for v in values:
+            self._lists[k].append(str(v))
+        return len(self._lists[k])
+
+    def ltrim(self, key, start, end):
+        k = str(key)
+        if k in self._lists:
+            if end == -1:
+                self._lists[k] = self._lists[k][start:]
+            else:
+                self._lists[k] = self._lists[k][start : end + 1]
+        return True
+
+    def lrange(self, key, start, end):
+        k = str(key)
+        lst = self._lists.get(k, [])
+        if end == -1:
+            return lst[start:]
+        return lst[start : end + 1]
+
+    def blpop(self, keys, timeout=0):
+        if isinstance(keys, str):
+            keys = [keys]
+        for k in keys:
+            if k in self._lists and self._lists[k]:
+                return (k, self._lists[k].pop(0))
+        return None
+
+    def ping(self):
+        return True
+
+    def pipeline(self):
+        return InMemoryPipeline(self)
+
+
 class RedisMetricsManager:
     """
     Manages fast, temporary monitoring metrics, rolling time windows, and event streaming via Redis.
-    Falls back gracefully to FakeRedis if a real Redis server is unreachable.
+    Falls back gracefully to FakeRedis or built-in InMemoryRedis if a real Redis server is unreachable.
     """
 
     def __init__(self, redis_url: Optional[str] = None):
@@ -27,6 +136,9 @@ class RedisMetricsManager:
         self.client = self._init_client()
 
     def _init_client(self):
+        if redis is None:
+            logger.info("[Redis] Redis library not installed. Using built-in in-memory engine.")
+            return InMemoryRedis()
         try:
             client = redis.Redis.from_url(
                 self.redis_url,
@@ -41,8 +153,7 @@ class RedisMetricsManager:
             logger.warning(f"[Redis] Live Redis unavailable ({exc}). Using isolated in-memory Redis engine.")
             if fakeredis:
                 return fakeredis.FakeRedis(decode_responses=True)
-            # Fallback simple client
-            return redis.Redis(decode_responses=True)
+            return InMemoryRedis()
 
     # -------------------------------------------------------------
     # Queue Operations for Background Worker

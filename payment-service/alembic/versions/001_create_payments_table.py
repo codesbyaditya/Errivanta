@@ -1,5 +1,4 @@
 """create payments table
-
 Revision ID: 001_create_payments
 Revises: 
 Create Date: 2026-09-05 18:50:00.000000

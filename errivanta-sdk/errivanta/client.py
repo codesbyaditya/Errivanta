@@ -19,7 +19,12 @@ class ErrivantaClient:
         timeout_seconds: float = 2.0,
     ):
         self.api_key = api_key
-        self.monitoring_url = monitoring_url.rstrip("/")
+        url = monitoring_url.rstrip("/")
+        for suffix in ["/api/v1/events", "/api/v1/telemetry", "/api/v1", "/telemetry", "/events"]:
+            if url.endswith(suffix):
+                url = url[:-len(suffix)].rstrip("/")
+                break
+        self.monitoring_url = url
         self.events_endpoint = f"{self.monitoring_url}/api/v1/events"
         self.timeout = timeout_seconds
 

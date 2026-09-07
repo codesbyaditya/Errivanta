@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 
-const BACKEND_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const BACKEND_URL = import.meta.env.VITE_API_URL || (
+  typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:8001'
+    : 'https://errivanta.onrender.com'
+);
 const API_BASE = `${BACKEND_URL}/api/v1`;
 
 export default function App() {
