@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     SMTP_USER: str = os.getenv("SMTP_USER", "errivanta@gmail.com")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "hjrbmjbiruxzdvli")
     SMTP_FROM_EMAIL: str = os.getenv("SMTP_FROM_EMAIL", "errivanta@gmail.com")
-    ALERT_EMAIL_RECIPIENT: str = os.getenv("ALERT_EMAIL_RECIPIENT", "errivanta@gmail.com")
+    ALERT_EMAIL_RECIPIENT: str = os.getenv("ALERT_EMAIL_RECIPIENT", "adityapulipati66@gmail.com")
     NOTIFICATIONS_ENABLED: bool = os.getenv("NOTIFICATIONS_ENABLED", "True").lower() in ("true", "1", "yes")
 
     model_config = SettingsConfigDict(

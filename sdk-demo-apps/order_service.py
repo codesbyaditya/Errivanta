@@ -1,16 +1,18 @@
 import os
+import logging
 import httpx
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request
 from errivanta import Errivanta
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] (%(name)s): %(message)s"
+)
+logger = logging.getLogger("order-service")
+
 # Load environment variables (.env in current directory or parent)
 load_dotenv()
-
-# 1. Initialize FastAPI app
-
-# 2. Configure and attach Errivanta SDK
-
 
 app = FastAPI(title="Order Service")
 PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8003")
@@ -18,8 +20,9 @@ PAYMENT_SERVICE_URL = os.getenv("PAYMENT_SERVICE_URL", "http://localhost:8003")
 # 1. Initialize Errivanta Monitoring
 monitor = Errivanta(
     service_name="order-service",
-    api_key="sw_demo_order_key_12345",
-    monitoring_url="https://errivanta.onrender.com"
+    api_key=os.getenv("ORDER_SERVICE_API_KEY", "sw_demo_order_key_12345"),
+    monitoring_url=os.getenv("ERRIVANTA_MONITORING_URL", "https://errivanta.onrender.com"),
+    timeout=5.0
 )
 monitor.init_app(app)
 

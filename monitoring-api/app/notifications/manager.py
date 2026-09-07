@@ -29,7 +29,7 @@ class NotificationManager:
         Notification rule:
         - Must be enabled in settings.
         - Severity must be CRITICAL (or escalating to CRITICAL).
-        - Ongoing OPEN incidents must not repeatedly send notifications.
+        - Prevents high-frequency repeat notifications within 5-minute cooldown.
         """
         if not settings.NOTIFICATIONS_ENABLED:
             return False
@@ -37,15 +37,21 @@ class NotificationManager:
         if incident.severity != "CRITICAL":
             return False
 
-        # If already notified at CRITICAL level for this ongoing OPEN incident, prevent spam
-        if (
-            incident.last_notified_severity == "CRITICAL"
-            and incident.status == "OPEN"
-        ):
-            logger.debug(
-                f"[NotificationManager] Suppressing duplicate notification for ongoing Incident #{incident.id}"
-            )
-            return False
+        # If already notified at CRITICAL level for this ongoing OPEN incident, check 5-minute cooldown
+        if incident.last_notified_severity == "CRITICAL" and incident.status == "OPEN":
+            if incident.notified_at:
+                now_utc = datetime.now(timezone.utc)
+                last_notified = incident.notified_at
+                if last_notified.tzinfo is None:
+                    last_notified = last_notified.replace(tzinfo=timezone.utc)
+                elapsed_seconds = (now_utc - last_notified).total_seconds()
+                if elapsed_seconds < 300:  # 5-minute anti-spam cooldown
+                    logger.debug(
+                        f"[NotificationManager] Suppressing duplicate notification for ongoing Incident #{incident.id} (cooldown: {int(elapsed_seconds)}s/300s)"
+                    )
+                    return False
+            else:
+                return True
 
         return True
 

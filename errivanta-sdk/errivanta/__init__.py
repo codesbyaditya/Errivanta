@@ -40,7 +40,7 @@ class Errivanta:
         service_name: str,
         api_key: str,
         monitoring_url: str = "http://localhost:8001",
-        timeout: float = 2.0,
+        timeout: float = 5.0,
         skip_paths: Optional[List[str]] = None,
     ):
         self.service_name = service_name

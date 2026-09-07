@@ -1,9 +1,16 @@
 import os
 import random
+import logging
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from errivanta import Errivanta
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] (%(name)s): %(message)s"
+)
+logger = logging.getLogger("payment-service")
 
 # Load environment variables (.env in current directory or parent)
 load_dotenv()
@@ -14,8 +21,9 @@ app = FastAPI(title="Payment Service", version="1.0.0")
 # 2. Configure and attach Errivanta SDK
 monitor = Errivanta(
     service_name="payment-service",
-    api_key="sw_demo_payment_key_12345",
-    monitoring_url="https://errivanta.onrender.com"
+    api_key=os.getenv("PAYMENT_SERVICE_API_KEY", "sw_demo_payment_key_12345"),
+    monitoring_url=os.getenv("ERRIVANTA_MONITORING_URL", "https://errivanta.onrender.com"),
+    timeout=5.0
 )
 monitor.init_app(app)
 

@@ -16,7 +16,7 @@ class ErrivantaClient:
         self,
         api_key: str,
         monitoring_url: str = "http://localhost:8001",
-        timeout_seconds: float = 2.0,
+        timeout_seconds: float = 5.0,
     ):
         self.api_key = api_key
         url = monitoring_url.rstrip("/")
